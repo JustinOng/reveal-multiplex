@@ -16,27 +16,31 @@ function main() {
     if (!secret) return;
 
     socket.emit("auth", secret);
-    socket.once("auth", (data) => {
-      if (!data.ok) return;
+  });
 
-      // auth ok, configure transmission of changes
-      function post() {
-        socket.emit("master-update", {
-          state: Reveal.getState(),
-        });
-      }
+  socket.on("auth", (data) => {
+    if (!data.ok) {
+      console.log("Failed to authenticate");
+      return;
+    }
 
-      [
-        "slidechanged",
-        "fragmentshown",
-        "fragmenthidden",
-        "overviewhidden",
-        "overviewshown",
-        "paused",
-        "resumed",
-      ].forEach((evt) => {
-        Reveal.addEventListener(evt, post);
+    // auth ok, configure transmission of changes
+    function post() {
+      socket.emit("master-update", {
+        state: Reveal.getState(),
       });
+    }
+
+    [
+      "slidechanged",
+      "fragmentshown",
+      "fragmenthidden",
+      "overviewhidden",
+      "overviewshown",
+      "paused",
+      "resumed",
+    ].forEach((evt) => {
+      Reveal.addEventListener(evt, post);
     });
   });
 
