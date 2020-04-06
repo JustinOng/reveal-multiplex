@@ -24,6 +24,22 @@ function createHash(secret) {
 }
 
 (() => {
+  const stats = new Proxy(
+    {
+      viewers: 0,
+      masters: 0,
+    },
+    {
+      set: (_stats, prop, val) => {
+        _stats[prop] = val;
+
+        io.emit("stats", _stats);
+
+        return true;
+      },
+    }
+  );
+
   const secret = randBytes(32);
 
   const index = fs.readFileSync(`public/index.html`, { encoding: "utf-8" });
@@ -36,11 +52,16 @@ function createHash(secret) {
   );
 
   io.on("connection", function (socket) {
+    stats.viewers++;
+
     socket.on("auth", (_secret) => {
       if (secret === _secret) {
         socket.authed = true;
         console.log(`Master connected`);
         socket.emit("auth", { ok: true });
+
+        stats.viewers--;
+        stats.masters++;
       } else {
         console.warn(`Attempt to auth with bad secret ${_secret}`);
         socket.emit("auth", { ok: false });
@@ -50,6 +71,14 @@ function createHash(secret) {
         if (!socket.authed) return;
         socket.broadcast.emit("update", data);
       });
+    });
+
+    socket.on("disconnect", () => {
+      if (socket.authed) {
+        stats.masters--;
+      } else {
+        stats.viewers--;
+      }
     });
   });
 
