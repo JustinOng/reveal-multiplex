@@ -36,28 +36,18 @@ function createHash(secret) {
   );
 
   io.on("connection", function (socket) {
-    socket.on("multiplex-statechanged", function (data) {
-      if (
-        typeof data.secret == "undefined" ||
-        data.secret == null ||
-        data.secret === ""
-      )
-        return;
-      if (createHash(data.secret) === data.socketId) {
-        data.secret = null;
-        socket.broadcast.emit(data.socketId, data);
-      }
-    });
-
     socket.on("auth", (_secret) => {
       if (secret === _secret) {
-        socket.join("master");
+        socket.authed = true;
+        console.log(`Master connected`);
         socket.emit("auth", { ok: true });
       } else {
-        return;
+        console.warn(`Attempt to auth with bad secret ${_secret}`);
+        socket.emit("auth", { ok: false });
       }
 
       socket.on("master-update", (data) => {
+        if (!socket.authed) return;
         socket.broadcast.emit("update", data);
       });
     });
