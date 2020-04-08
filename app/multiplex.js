@@ -27,7 +27,8 @@ function main() {
     console.log("Socket connected");
     document.querySelector("#type").innerText = "Connected";
 
-    const secret = window.location.pathname.substr(1);
+    const uris = window.location.pathname.split("/");
+    const secret = uris[uris.length - 1];
     if (!secret) return;
 
     socket.emit("auth", secret);
