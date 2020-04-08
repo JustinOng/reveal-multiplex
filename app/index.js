@@ -47,7 +47,7 @@ function createHash(secret) {
     `/tmp/index.html`,
     index.replace(
       "<head>",
-      "<head><script src='socket.io/socket.io.js'></script><script src='multiplex.js'></script>"
+      "<head><script src='socket.io/socket.io.js'></script><script src='custom.js'></script><script src='multiplex.js'></script>"
     )
   );
 
